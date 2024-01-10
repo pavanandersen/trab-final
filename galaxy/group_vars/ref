@@ -1,0 +1,21 @@
+AUTH_KEY: 55}a.|]~J_&xqy1Tzj+EKIAb^%+u_-LWj4vT-.8=!;-./|z*Fg/G:K1-|+BTpX!Y
+SECURE_AUTH_KEY: oQ2)!(LISKscS*3{Z_<j]BC apv$vUyUhf*{:zasJ&q4g@PXLl0E!^*pt7>-Ld[-
+LOGGED_IN_KEY: HE|mip}vngoev~U$P2H:2,l(Q=GF+cUl+n6tzkb[YV1`[dui3S0o]jE->vJWXN|]
+NONCE_KEY: MD!{U}w]<{^{Rcm?swml8rLFO.kApT:ur aQyCdR:@,iBrvld+<C!(q+}(6~JBSe
+AUTH_SALT: Q<Dd7H~HYRM-]?K[4u3&ijr:d{IS1cbiD#+yygZg[q/0p/h!#|4iA}[!pT[2K3Ss
+SECURE_AUTH_SALT: veu@M0O;<CcO$6hyY}+zRD;Pm?}+Pm+H!4X|fJU:,7A{3w?S#f|G+!HeRFX<N7>K
+LOGGED_IN_SALT: f43|CIfH`=m3HK)q^dzBbZE,6b azb@hdQ#P<j5%hfmpmeL_Qq3l~9,]<ZM]KcB)
+NONCE_SALT: )u<Z=tMMGs-miQo1XHF&p<[X8W`|#d+v 7H6~T9r TJ0R+CxIc-^DDS3Q#>uIHOF
+
+#root_password: "root"
+#
+#user_name: "wordpressuser"
+#user_pass: "wordpresspass"
+#db_name: "wordpress"
+
+db_name: ${db_name_wp}
+db_host: ${db_RDS}
+db_username: ${db_username}
+db_password: ${db_user_password}
+
+mysql_port: 3306

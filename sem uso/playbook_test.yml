@@ -1,0 +1,68 @@
+---
+- name: Instalar o WordPress em um novo servidor
+  hosts: all
+  become: yes
+    
+  tasks:
+  - name: Configurando variáveis
+    set_fact:
+      php_modules: [ 'php-fpm', 'php-mysql', 'php-curl', 'php-gd', 'php-mbstring', 'php-xml', 'php-xmlrpc', 'php-soap', 'php-intl', 'php-zip' ]
+      mysql_rds: ${db_RDS}  
+      mysql_db: ${db_name}
+      mysql_user: ${db_username}
+      mysql_password: ${db_user_password}
+    
+  - name: Atualizar o APT
+    apt:
+      update_cache: yes
+    
+  - name: Instalar o servidor Nginx
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - nginx
+      - mysql-server
+    
+  - name: Instalar o PHP e extensões
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ php_modules }}"
+    
+  - name: Definir permissões para diretórios
+    shell: "/usr/bin/find /var/www/html/ -type d -exec chmod 2775 {} \\;"
+    
+  - name: Definir permissões para arquivos
+    shell: "/usr/bin/find /var/www/html/ -type f -exec chmod 0664 {} \\;"
+    
+  - name: Fazer download e descompactar o WordPress
+    unarchive:
+      src: https://wordpress.org/latest.tar.gz
+      dest: "/var/www"
+      remote_src: yes
+      
+  - name: Copiar os arquivos do WordPress para a pasta /html
+    shell: cp /var/www/wordpress/. /var/www/html -r
+    
+  - name: Excluir os arquivos antigos do WordPress
+    file:
+      path: /var/www/wordpress
+      state: absent
+    
+  #- name: Configurar o wp-config
+  #  template:
+  #    src: "files/wp-config.php.j2"
+  #    dest: "/var/www/html/wp-config.php"
+      
+  - name: Definir permissões (mudar proprietário)
+    shell: chown -R ubuntu:www-data /var/www/html
+    
+  - name: Definir permissões (chmod 774)
+    shell: chmod -R 774 /var/www/html
+    
+  - name: Iniciar o servidor Nginx
+    service:
+      name: nginx
+      state: restarted
+      enabled: yes

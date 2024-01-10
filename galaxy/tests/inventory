@@ -1,0 +1,5 @@
+[all]
+${ip_servidor}
+
+[localhost]
+${ip_servidor}

@@ -1,0 +1,13 @@
+database_name           = "wordpress_db"          // database name
+database_user           = "wordpress_user"        //database username
+shared_credentials_file = "~/.aws/credentials"                //Access key and Secret key file location
+region                  = "us-east-1"        //north-virginia
+ami                     = "ami-053b0d53c279acc90" // Ubuntu Server 22.04
+AZ1                     = "us-east-1a"       // avaibility zone
+AZ2                     = "us-east-1b"
+AZ3                     = "us-east-1c"
+KEY_NAME                = "chave-ansible"
+PUBLIC_KEY_PATH         = "./galaxy/chave-ansible.pub" // key name for ec2, make sure it is created before terrafomr apply
+PRIV_KEY_PATH           = "./galaxy/chave-ansible.pem"
+instance_type           = "t2.micro" //type pf instance
+instance_class          = "db.t3.micro"
