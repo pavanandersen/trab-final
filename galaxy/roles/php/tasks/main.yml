@@ -1,0 +1,11 @@
+---
+# tasks file for ansible-role-php
+
+- name: Ensure PHP server and plugins is present using apt
+  become: yes
+  apt:
+    name: ['php-fpm', 'php-mysql', 'php-curl', 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip']
+    update_cache: yes
+    cache_valid_time: 86400
+    state: present
+    force: yes

@@ -1,0 +1,27 @@
+---
+# tasks file for ansible-role-nginx
+
+- name: Ensure Nginx is present using apt
+  become: yes
+  apt:
+    name: nginx
+    update_cache: yes
+    cache_valid_time: 86400
+    state: present
+    force: yes
+  tags: [ nginx ]
+
+- name: Create document root
+  file:
+    path: "{{ sites_path }}"
+    state: directory
+    owner: "www-data"
+    group: "www-data"
+    mode: '0755'
+  tags: [ nginx ]
+
+- name: Remove default page
+  file:
+    state: absent
+    path: /etc/nginx/sites-enabled/default
+  tags: [ nginx ]

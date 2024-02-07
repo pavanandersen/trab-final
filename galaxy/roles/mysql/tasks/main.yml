@@ -1,0 +1,72 @@
+---
+# tasks file for ansible-role-mysql
+
+- name: Ensure packages is present using apt
+  become: yes
+  apt:
+    name: ['mysql-server', 'python3-pip']
+    update_cache: yes
+    cache_valid_time: 86400
+    state: present
+    force: yes
+  tags: [ mysql ]
+
+- name: Ensure pymysql is present using pip
+  pip:
+    name: pymysql
+    state: present
+    executable: pip3
+  tags: [ mysql ]
+
+- name: Started mysql
+  service:
+    name: mysql
+    state: started
+  tags: [ mysql ]
+
+- name: Set the root password
+  mysql_user:
+    name: root
+    password: "{{ root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    login_password: "{{ root_password }}"
+  no_log: true
+  tags: [ mysql, mysql-root ]
+
+- name: Remove all anonymous user accounts
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ root_password }}"
+  no_log: true
+  tags: [ mysql ]
+
+- name: Remove the MySQL test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ root_password }}"
+  tags: [ mysql ]
+
+- name: Creates database
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ root_password }}"
+  tags: [ mysql ]
+
+- name: Create MySQL admin user for database
+  mysql_user:
+    name: "{{ user_name }}"
+    password: "{{ user_pass }}"
+    priv: "{{ db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_password: "{{ root_password }}"
+  no_log: true
+  tags: [ mysql ]

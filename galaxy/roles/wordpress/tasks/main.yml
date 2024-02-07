@@ -1,0 +1,51 @@
+---
+# tasks file for ansible-role-wordpress
+
+  - name: Download and unpack latest WordPress
+    unarchive:
+      src: https://{{ app_name }}.org/latest.tar.gz
+      dest: "{{ sites_path }}"
+      remote_src: yes
+      creates: "{{ sites_path }}/{{ app_name }}"
+    tags: [ wordpress ]
+
+  - name: Set ownership
+    file:
+      path: "{{ sites_path }}"
+      state: directory
+      recurse: yes
+      owner: www-data
+      group: www-data
+    tags: [ wordpress ]
+
+  - name: Set permissions for directories
+    shell: "/usr/bin/find {{ sites_path }}/{{ app_name }}/ -type d -exec chmod 750 {} \\;"
+    register: chmod_result
+    changed_when: "chmod_result.stdout != \"\""
+    tags: [ wordpress ]
+
+  - name: Set permissions for files
+    shell: "/usr/bin/find {{ sites_path }}/{{ app_name }}/ -type f -exec chmod 640 {} \\;"
+    register: chmod_result
+    changed_when: "chmod_result.stdout != \"\""
+    tags: [ wordpress ]
+
+  - name: Set up wp-config
+    template:
+      src: "wp-config.php.j2"
+      dest: "{{ sites_path }}/{{ app_name }}/wp-config.php"
+    tags: [ wordpress ]
+
+  - name: Add site to sites folder in Nginx
+    template:
+      src: wordpress.conf.j2
+      dest: /etc/nginx/sites-available/{{ app_name }}
+    tags: [ wordpress , nginx ]
+
+  - name: Activate activate site
+    file:
+      src: /etc/nginx/sites-available/{{ app_name }}
+      dest: /etc/nginx/sites-enabled/{{ app_name }}
+      state: link
+    notify: Reload nginx
+    tags: [ wordpress , nginx ]
