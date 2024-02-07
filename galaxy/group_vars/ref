@@ -7,11 +7,11 @@ SECURE_AUTH_SALT: veu@M0O;<CcO$6hyY}+zRD;Pm?}+Pm+H!4X|fJU:,7A{3w?S#f|G+!HeRFX<N7
 LOGGED_IN_SALT: f43|CIfH`=m3HK)q^dzBbZE,6b azb@hdQ#P<j5%hfmpmeL_Qq3l~9,]<ZM]KcB)
 NONCE_SALT: )u<Z=tMMGs-miQo1XHF&p<[X8W`|#d+v 7H6~T9r TJ0R+CxIc-^DDS3Q#>uIHOF
 
-#root_password: "root"
-#
-#user_name: "wordpressuser"
-#user_pass: "wordpresspass"
-#db_name: "wordpress"
+sites_path: "/var/www/http_host"
+
+domain_name: wp.com
+app_name: wordpress
+php_fpm_sock: /run/php/php-fpm.sock
 
 db_name: ${db_name_wp}
 db_host: ${db_RDS}
