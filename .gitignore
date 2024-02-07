@@ -1,0 +1,15 @@
+# Ignorar todos os arquivos .log
+*.log
+
+# Ignorar arquivos de configuração pessoal
+*.cfg
+
+# Ignorar arquivos de chave privada
+*.pem
+*.key
+*.pub
+
+# Ignorar arquivos de configuração específicos do IDE ou editor
+.vscode/
+.terraform/
+
