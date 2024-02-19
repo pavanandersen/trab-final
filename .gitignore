@@ -12,4 +12,7 @@
 # Ignorar arquivos de configuração específicos do IDE ou editor
 .vscode/
 .terraform/
+terraform.tfstate
+terraform.tfstate.backup
+
 
