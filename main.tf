@@ -1,8 +1,6 @@
 provider "aws" {
 
   region                  = var.region
-  shared_credentials_files =[var.shared_credentials_file]
-  profile                  = "default"
 }
 
 
@@ -13,8 +11,11 @@ resource "aws_vpc" "prod-vpc" {
   enable_dns_hostnames = "true" #gives you an internal host name
   
   instance_tenancy     = "default"
+}
 
-
+# Create IGW for internet connection 
+resource "aws_internet_gateway" "prod-igw" {
+  vpc_id = aws_vpc.prod-vpc.id
 }
 
 # Create Public Subnet for EC2
@@ -26,29 +27,31 @@ resource "aws_subnet" "prod-subnet-public-1" {
 
 }
 
+resource "aws_subnet" "prod-subnet-public-2" {
+  vpc_id                  = aws_vpc.prod-vpc.id
+  cidr_block              = "10.0.3.0/24"
+  map_public_ip_on_launch = "true" //it makes this a public subnet
+  availability_zone       = var.AZ2
+
+}
+
+
+
 # Create Private subnet for RDS
-resource "aws_subnet" "prod-subnet-private-1" {
+resource "aws_subnet" "prod-subnet-private-2" {
   vpc_id                  = aws_vpc.prod-vpc.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = "false" //it makes private subnet
-  availability_zone       = var.AZ2
+  availability_zone       = var.AZ1
 
 }
 
 # Create second Private subnet for RDS
 resource "aws_subnet" "prod-subnet-private-2" {
   vpc_id                  = aws_vpc.prod-vpc.id
-  cidr_block              = "10.0.3.0/24"
+  cidr_block              = "10.0.4.0/24"
   map_public_ip_on_launch = "false" //it makes private subnet
-  availability_zone       = var.AZ3
-
-}
-
-
-
-# Create IGW for internet connection 
-resource "aws_internet_gateway" "prod-igw" {
-  vpc_id = aws_vpc.prod-vpc.id
+  availability_zone       = var.AZ2
 
 }
 
@@ -62,14 +65,16 @@ resource "aws_route_table" "prod-public-crt" {
     //CRT uses this IGW to reach internet
     gateway_id = aws_internet_gateway.prod-igw.id
   }
-
-
 }
-
 
 # Associating route tabe to public subnet
 resource "aws_route_table_association" "prod-crta-public-subnet-1" {
   subnet_id      = aws_subnet.prod-subnet-public-1.id
+  route_table_id = aws_route_table.prod-public-crt.id
+}
+
+resource "aws_route_table_association" "prod-crta-public-subnet-2" {
+  subnet_id      = aws_subnet.prod-subnet-public-2.id
   route_table_id = aws_route_table.prod-public-crt.id
 }
 
@@ -78,8 +83,6 @@ resource "aws_route_table_association" "prod-crta-public-subnet-1" {
 //security group for EC2
 
 resource "aws_security_group" "ec2_allow_rule" {
-
-
   ingress {
     description = "HTTPS"
     from_port   = 443
@@ -186,22 +189,88 @@ data "template_file" "hosts-correto" {
   }
 }
 
-
-# Create EC2 ( only after RDS is provisioned)
-resource "aws_instance" "wordpressec2" {
-  ami             = var.ami
-  instance_type   = var.instance_type
-  subnet_id       = aws_subnet.prod-subnet-public-1.id
-  vpc_security_group_ids = ["${aws_security_group.ec2_allow_rule.id}"]
-  
-  key_name = var.KEY_NAME
-  tags = {
-    Name = "Wordpress.web"
-  }
-
-  # this will stop creating EC2 before RDS is provisioned
-  depends_on = [aws_db_instance.wordpressdb]
+# Configurações de LB, TG e AE
+resource "aws_lb" "loadBalancer" {
+  name               = "lb-teste"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.ec2_allow_rule.id]
+  subnets            = [aws_subnet.prod-subnet-public-1.id, aws_subnet.prod-subnet-public-2.id]
+  depends_on         = [aws_internet_gateway.prod-igw]
 }
+
+resource "aws_lb_target_group" "targetGrou-lb" {
+  name     = "tg-teste"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.prod-vpc.id
+}
+
+resource "aws_lb_listener" "lb-listener" {
+  load_balancer_arn = aws_lb.loadBalancer.arn
+  port              = "80"
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.targetGrou-lb.arn
+  }
+}
+
+# ASG with Launch template
+resource "aws_launch_template" "ec2-correta" {
+  name_prefix   = "ec2-correta"
+  image_id      = var.ami # To note: AMI is specific for each region
+  instance_type = var.instance_type
+  key_name = var.KEY_NAME
+  user_data     = filebase64("user_data.sh")
+
+  network_interfaces {
+    associate_public_ip_address = true
+    subnet_id                   = aws_subnet.prod-subnet-public-1
+    security_groups             = ["${aws_security_group.ec2_allow_rule.id}"]
+  }
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "Worpress-web" # Name for the EC2 instances
+    }
+  }
+}
+
+resource "aws_autoscaling_group" "group-AE" {
+  # no of instances
+  desired_capacity = 1
+  max_size         = 2
+  min_size         = 1
+
+  # Connect to the target group
+  target_group_arns = [aws_lb_target_group.targetGrou-lb.arn]
+
+  vpc_zone_identifier = [ # Creating EC2 instances in private subnet
+    aws_subnet.prod-subnet-public-2.id
+  ]
+
+  launch_template {
+    id      = aws_launch_template.ec2-correta.id
+    version = "$Latest"
+  }
+}
+
+# # Create EC2 ( only after RDS is provisioned)
+# resource "aws_instance" "wordpressec2" {
+#   ami             = var.ami
+#   instance_type   = var.instance_type
+#   subnet_id       = aws_subnet.prod-subnet-public-1.id
+#   vpc_security_group_ids = ["${aws_security_group.ec2_allow_rule.id}"]
+  
+#   key_name = var.KEY_NAME
+#   tags = {
+#     Name = "Wordpress.web"
+#   }
+
+#   # this will stop creating EC2 before RDS is provisioned
+#   depends_on = [aws_db_instance.wordpressdb]
+# }
 
 // Sends your public key to the instance
 resource "aws_key_pair" "chave-ansible" {
