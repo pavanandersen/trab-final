@@ -38,7 +38,7 @@ resource "aws_subnet" "prod-subnet-public-2" {
 
 
 # Create Private subnet for RDS
-resource "aws_subnet" "prod-subnet-private-2" {
+resource "aws_subnet" "prod-subnet-private-1" {
   vpc_id                  = aws_vpc.prod-vpc.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = "false" //it makes private subnet
@@ -222,11 +222,11 @@ resource "aws_launch_template" "ec2-correta" {
   image_id      = var.ami # To note: AMI is specific for each region
   instance_type = var.instance_type
   key_name = var.KEY_NAME
-  user_data     = filebase64("user_data.sh")
+  #user_data     = filebase64("user_data.sh")
 
   network_interfaces {
     associate_public_ip_address = true
-    subnet_id                   = aws_subnet.prod-subnet-public-1
+    subnet_id                   = aws_subnet.prod-subnet-public-1.id
     security_groups             = ["${aws_security_group.ec2_allow_rule.id}"]
   }
   tag_specifications {
@@ -280,7 +280,7 @@ resource "aws_key_pair" "chave-ansible" {
 
 # creating Elastic IP for EC2
 resource "aws_eip" "eip" {
-  instance = aws_instance.wordpressec2.id
+  instance = aws_launch_template.ec2-correta.id
 
 }
 
@@ -315,7 +315,7 @@ resource "local_file" "hosts-correto-file" {
 resource "null_resource" "Wordpress_Installation_Waiting" {
 
 triggers={
-    ec2_id=aws_instance.wordpressec2.id,
+    ec2_id=aws_launch_template.ec2-correta.id,
     rds_endpoint=aws_db_instance.wordpressdb.endpoint
     
     }
