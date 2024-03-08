@@ -12,3 +12,6 @@
     - wordpress
     - docker
 #    - containers
+    - prometheus
+    - node_exporter
+    - grafana
