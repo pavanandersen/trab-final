@@ -319,6 +319,9 @@ triggers={
     rds_endpoint=aws_db_instance.wordpressdb.endpoint
     
     }
+}
+
+
 
 /*   connection {
     type        = "ssh"
@@ -339,7 +342,7 @@ triggers={
       "sudo apt install unzip -y",
       "echo 'Concluído' && exit 0"
     ]
-} */
+
 
 # Play ansiblw playbook
 provisioner "local-exec" {
@@ -349,3 +352,4 @@ provisioner "local-exec" {
   EOT
 }
 }
+} */  

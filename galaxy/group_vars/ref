@@ -19,3 +19,14 @@ db_username: ${db_username}
 db_password: ${db_user_password}
 
 mysql_port: 3306
+
+grafana_gpg_key: "wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null"
+grafana_repo: 'echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list'
+
+p_user: "prometheus"
+n_user: "node_exporter"
+node_url: "https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz"
+
+p_user: "prometheus"
+n_user: "node_exporter"
+prometheus_url: "https://github.com/prometheus/prometheus/releases/download/v2.47.1/prometheus-2.47.1.linux-amd64.tar.gz"
